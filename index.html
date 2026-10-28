@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaLink - Translate & Save</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles for PWA and Utilities -->
+    <style>
+        body { transition: background-color 0.3s, color 0.3s; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <!-- Manifest via Data URI -->
+    <link rel="manifest" id="manifest-link" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIkxpbmd1YUxpbmsgLSBUcmFuc2xhdG9yIiwKICAic2hvcnRfbmFtZSI6ICJMaW5ndWExaW5rIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciIjogIiMzMzMiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImh0dHBzOi8vdmViLmV4YW1wbGUuY29tL2ljb25zL2ljb24xOTJwLnBuZyIsCiAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgfV0KfQ=='>
+
+    <!-- Favicon (Lucide Icon as SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m18 10-4-2%22/><path d=%22m14 10 4-2%22/><path d=%22M2 12h6%22/><path d=%22M12 12v9%22/><path d=%22m16 15 3 6%22/><path d=%22m22 15-3 6%22/><path d=%22m8 12 3 6%22/><path d=%22m2 6 4 6%22/><path d=%22m6 6 4 6%22/></svg>">
+</head>
+<body class="min-h-screen flex flex-col bg-base-200 text-base-content font-sans">
+
+    <!-- Header / Navbar -->
+    <header class="navbar bg-base-100 shadow-md z-10">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-xl gap-2">
+                <i data-lucide="languages" class="text-primary"></i>
+                LinguaLink
+            </a>
+        </div>
+        <div class="flex-none gap-2">
+            <label class="swap swap-rotate btn btn-ghost btn-circle">
+                <!-- this hidden checkbox controls the state -->
+                <input type="checkbox" id="theme-toggle" /> 
+                <!-- sun icon -->
+                <i data-lucide="sun" class="swap-on fill-current"></i>
+                <!-- moon icon -->
+                <i data-lucide="moon" class="swap-off fill-current"></i>
+            </label>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 flex-grow max-w-3xl">
+        
+        <!-- Translation Card -->
+        <div class="card bg-base-100 shadow-xl mb-8 fade-in">
+            <div class="card-body">
+                
+                <!-- Input Section -->
+                <div class="form-control w-full mb-4">
+                    <label class="label"><span class="label-text font-semibold">Translate Text</span></label>
+                    <textarea id="inputText" class="textarea textarea-bordered h-24 w-full focus:outline-none" placeholder="Enter text to translate..."></textarea>
+                </div>
+
+                <!-- Controls Row -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-4 items-end sm:items-center justify-between">
+                    
+                    <!-- Language Selectors -->
+                    <div class="flex-1 grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                        <select id="sourceLang" class="select select-bordered select-sm flex-1">
+                            <option value="auto">Detect Language</option>
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ja">Japanese</option>
+                        </select>
+                        
+                        <button id="swapBtn" class="btn btn-circle btn-sm btn-ghost hover:bg-base-300" title="Swap Languages">
+                            <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                        </button>
+
+                        <select id="targetLang" class="select select-bordered select-sm flex-1">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ja">Japanese</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                         <!-- Image Upload Button -->
+                         <label class="btn btn-square btn-outline btn-sm tooltip" data-tip="Upload Image (OCR simulation)">
+                            <input type="file" id="imageInput" accept="image/*" class="hidden" />
+                            <i data-lucide="image"></i>
+                        </label>
+                        <button id="translateBtn" class="btn btn-primary btn-sm gap-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Translate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Output Section -->
+                <div class="relative group">
+                    <div class="label">
+                        <span class="label-text font-semibold">Result</span>
+                        <div id="outputActions" class="opacity-0 group-hover:opacity-100 absolute top-2 right-2 flex gap-2 transition-opacity duration-200">
+                             <button id="favBtn" class="btn btn-circle btn-sm btn-ghost" title="Add to Favorites">
+                                <i data-lucide="heart" class="w-4 h-4"></i>
+                            </button>
+                            <button id="copyBtn" class="btn btn-circle btn-sm btn-ghost" title="Copy to Clipboard">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="outputText" class="textarea textarea-bordered h-24 w-full bg-base-200/50" readonly placeholder="Translation will appear here..."></textarea>
+                    <div id="imagePreviewContainer" class="mt-2 hidden">
+                        <img id="imagePreview" src="" alt="Uploaded Preview" class="max-h-48 rounded-lg border border-base-300" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="collapse collapse-arrow bg-base-100 shadow-md mb-8 open">
+            <input type="checkbox" checked /> 
+            <div class="collapse-title text-xl font-medium flex justify-between items-center">
+                <span>Translation History</span>
+                <button id="clearHistoryBtn" class="btn btn-xs btn-ghost text-error">Clear All</button>
+            </div>
+            <div class="collapse-content"> 
+                <ul id="historyList" class="space-y-3">
+                    <!-- History Items injected here -->
+                    <li class="text-center text-base-content/50 py-4">No history yet.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Favorites Section -->
+        <div class="card bg-base-100 shadow-xl mb-12">
+            <div class="card-body">
+                <h2 class="card-title text-secondary mb-4">
+                    <i data-lucide="star" class="w-5 h-5 fill-current"></i> Favorites
+                </h2>
+                <ul id="favoritesList" class="space-y-3">
+                    <!-- Favorite Items injected here -->
+                     <li class="text-center text-base-content/50 py-2">No favorites saved.</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer footer-center p-4 bg-base-100 text-base-content">
+        <aside>
+            <p>Made with <i data-lucide="heart" class="w-4 h-4 inline fill-error text-error"></i> using Vanilla JS, IndexedDB & Tailwind.</p>
+        </aside>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // --- Configuration ---
+        const DB_NAME = 'LinguaLinkDB';
+        const DB_VERSION = 1;
+        const STORE_HISTORY = 'translationHistory';
+        const STORE_FAVORITES = 'favorites';
+
+        // --- State Management ---
+        let db;
+        let currentImageFile = null;
+        let currentOutputText = '';
+        let isCurrentFavorite = false;
+
+        // --- DOM Elements ---
+        const els = {
+            inputText: document.getElementById('inputText'),
+            outputText: document.getElementById('outputText'),
+            sourceLang: document.getElementById('sourceLang'),
+            targetLang: document.getElementById('targetLang'),
+            swapBtn: document.getElementById('swapBtn'),
+            translateBtn: document.getElementById('translateBtn'),
+            imageInput: document.getElementById('imageInput'),
+            imagePreview: document.getElementById('imagePreview'),
+            imagePreviewContainer: document.getElementById('imagePreviewContainer'),
+            historyList: document.getElementById('historyList'),
+            favoritesList: document.getElementById('favoritesList'),
+            clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+            favBtn: document.getElementById('favBtn'),
+            copyBtn: document.getElementById('copyBtn'),
+            themeToggle: document.getElementById('theme-toggle')
+        };
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initDB();
+            loadTheme();
+            renderHistory();
+            renderFavorites();
+            lucide.createIcons();
+        });
+
+        // --- Theme Logic ---
+        els.themeToggle.addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                els.themeToggle.checked = savedTheme === 'dark';
+            } else {
+                // System preference check
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    els.themeToggle.checked = true;
+                }
+            }
+        }
+
+        // --- IndexedDB Setup ---
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_HISTORY)) {
+                        const store = db.createObjectStore(STORE_HISTORY, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_FAVORITES)) {
+                        const store = db.createObjectStore(STORE_FAVORITES, { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error("IndexedDB error:", event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        // --- Database Helpers ---
+        function addRecord(storeName, record) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                record.timestamp = Date.now();
+                const request = store.add(record);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function getAllRecords(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function deleteRecord(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // --- Core Features ---
+
+        // Mock Translation Function
+        async function mockTranslate(text, targetLang) {
+            // Simulate network delay
+            await new Promise(r => setTimeout(r, 600));
+            
+            if (!text.trim()) return "";
+            
+            // Simple mock logic based on language code
+            const prefixes = {
+                'es': '[ES] ',
+                'fr': '[FR] ',
+                'de': '[DE] ',
+                'zh': '[ZH] ',
+                'ja': '[JA] ',
+                'en': ''
+            };
+            
+            // Just prefixing for demo purposes
+            return `${prefixes[targetLang] || ''}${text} (Translated)`;
+        }
+
+        async function handleTranslate() {
+            const text = els.inputText.value;
+            const target = els.targetLang.value;
+            const source = els.sourceLang.value;
+
+            if (!text) return;
+
+            els.translateBtn.disabled = true;
+            els.translateBtn.innerHTML = `<span class="loading loading-spinner loading-sm"></span>`;
+
+            try {
+                const result = await mockTranslate(text, target);
+                els.outputText.value = result;
+                currentOutputText = result;
+                updateFavButtonState(false); // Reset favorite state for new translation
+                
+                // Save to history
+                const record = {
+                    sourceText: text,
+                    targetText: result,
+                    sourceLang: source,
+                    targetLang: target,
+                    timestamp: Date.now(),
+                    hasImage: !!currentImageFile
+                };
+                
+                // If we have an image, save it as a Blob in the record
+                if (currentImageFile) {
+                    record.imageData = currentImageFile; 
+                }
+
+                await addRecord(STORE_HISTORY, record);
+                renderHistory();
+            } catch (err) {
+                console.error(err);
+                alert("Translation failed");
+            } finally {
+                els.translateBtn.disabled = false;
+                els.translateBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> Translate`;
+                lucide.createIcons();
+            }
+        }
+
+        // --- Rendering UI ---
+
+        async function renderHistory() {
+            const records = await getAllRecords(STORE_HISTORY);
+            // Sort by newest first
+            records.sort((a, b) => b.timestamp - a.timestamp);
+            
+            els.historyList.innerHTML = '';
+
+            if (records.length === 0) {
+                els.historyList.innerHTML = '<li class="text-center text-base-content/50 py-4">No history yet.</li>';
+                return;
+            }
+
+            records.forEach(rec => {
+                const li = document.createElement('li');
+                li.className = "border-b border-base-200 pb-3 last:border-0";
+                
+                // Image handling
+                let imgHtml = '';
+                if (rec.hasImage && rec.imageData) {
+                    const url = URL.createObjectURL(rec.imageData);
+                    imgHtml = `<div class="mt-2"><img src="${url}" class="h-20 rounded object-cover border border-base-300" /></div>`;
+                }
+
+                li.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex-1">
+                            <div class="badge badge-sm bg-base-300 text-base-content mb-1">${rec.sourceLang} &rarr; ${rec.targetLang}</div>
+                            <p class="font-bold text-sm break-all">${escapeHtml(rec.sourceText)}</p>
+                            <p class="text-sm text-base-content/70 mt-1 break-all">${escapeHtml(rec.targetText)}</p>
+                            ${imgHtml}
+                            <div class="text-xs text-base-content/40 mt-1">${new Date(rec.timestamp).toLocaleString()}</div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                             <button onclick="loadToEditor(${rec.id})" class="btn btn-circle btn-sm btn-ghost" title="Load to Editor">
+                                <i data-lucide="move-left" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteFromHistory(${rec.id})" class="btn btn-circle btn-sm btn-ghost text-error hover:bg-red-100" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                els.historyList.appendChild(li);
+            });
+            lucide.createIcons();
+        }
+
+        async function renderFavorites() {
+            const favs = await getAllRecords(STORE_FAVORITES);
+            favs.sort((a, b) => b.timestamp - a.timestamp);
+            
+            els.favoritesList.innerHTML = '';
+
+            if (favs.length === 0) {
+                els.favoritesList.innerHTML = '<li class="text-center text-base-content/50 py-2">No favorites saved.</li>';
+                return;
+            }
+
+            favs.forEach(fav => {
+                const li = document.createElement('li');
+                li.className = "bg-base-200/50 rounded-lg p-3 relative group";
+                
+                let imgHtml = '';
+                if (fav.hasImage && fav.imageData) {
+                    const url = URL.createObjectURL(fav.imageData);
+                    imgHtml = `<div class="mt-2"><img src="${url}" class="h-20 rounded object-cover border border-base-300" /></div>`;
+                }
+
+                li.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex-1">
+                            <p class="font-bold text-sm break-all">${escapeHtml(fav.sourceText)}</p>
+                            <p class="text-sm text-base-content/70 mt-1 break-all">${escapeHtml(fav.targetText)}</p>
+                            ${imgHtml}
+                        </div>
+                        <button onclick="removeFavorite(${fav.id})" class="btn btn-circle btn-sm btn-ghost text-secondary hover:bg-base-300">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                els.favoritesList.appendChild(li);
+            });
+            lucide.createIcons();
+        }
+
+        // --- Event Listeners ---
+
+        // Translate Button
+        els.translateBtn.addEventListener('click', handleTranslate);
+
+        // Swap Languages
+        els.swapBtn.addEventListener('click', () => {
+            const temp = els.sourceLang.value;
+            if (temp === 'auto') return; // Can't swap auto
+            
+            els.sourceLang.value = els.targetLang.value;
+            els.targetLang.value = temp;
+        });
+
+        // Image Upload Handling
+        els.imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentImageFile = file;
+                const url = URL.createObjectURL(file);
+                els.imagePreview.src = url;
+                els.imagePreviewContainer.classList.remove('hidden');
+            }
+        });
+
+        // Copy to Clipboard
+        els.copyBtn.addEventListener('click', () => {
+            if (!els.outputText.value) return;
+            navigator.clipboard.writeText(els.outputText.value);
+            
+            // Visual feedback
+            const originalIcon = els.copyBtn.innerHTML;
+            els.copyBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-success"></i>`;
+            lucide.createIcons();
+            setTimeout(() => {
+                els.copyBtn.innerHTML = originalIcon;
+                lucide.createIcons();
+            }, 1500);
+        });
+
+        // Favorite Toggle
+        els.favBtn.addEventListener('click', async () => {
+            if (!currentOutputText) return;
+            
+            // Check if already favorited (by matching text roughly)
+            const existing = await getAllRecords(STORE_FAVORITES);
+            const exists = existing.some(f => f.sourceText === els.inputText.value && f.targetText === currentOutputText);
+            
+            if (exists) {
+                alert("Already in favorites!");
+                return;
+            }
+
+            const record = {
+                sourceText: els.inputText.value,
+                targetText: currentOutputText,
+                sourceLang: els.sourceLang.value,
+                targetLang: els.targetLang.value,
+                imageData: currentImageFile,
+                hasImage: !!currentImageFile
+            };
+            
+            await addRecord(STORE_FAVORITES, record);
+            renderFavorites();
+            updateFavButtonState(true);
+        });
+
+        function updateFavButtonState(isFav) {
+            isCurrentFavorite = isFav;
+            const icon = els.favBtn.querySelector('svg');
+            if (isFav) {
+                els.favBtn.classList.add('text-secondary', 'fill-current');
+                els.favBtn.classList.remove('text-base-content');
+            } else {
+                els.favBtn.classList.remove('text-secondary', 'fill-current');
+                els.favBtn.classList.add('text-base-content');
+            }
+        }
+
+        // Clear History
+        els.clearHistoryBtn.addEventListener('click', async () => {
+            if(confirm("Clear all translation history?")) {
+                const transaction = db.transaction([STORE_HISTORY], 'readwrite');
+                const store = transaction.objectStore(STORE_HISTORY);
+                await store.clear();
+                renderHistory();
+            }
+        });
+
+        // Global functions for onclick attributes
+        window.loadToEditor = async (id) => {
+            const records = await getAllRecords(STORE_HISTORY);
+            const rec = records.find(r => r.id === id);
+            if (rec) {
+                els.inputText.value = rec.sourceText;
+                els.targetLang.value = rec.targetLang;
+                els.sourceLang.value = rec.sourceLang;
+                if (rec.imageData) {
+                    currentImageFile = rec.imageData;
+                    els.imagePreview.src = URL.createObjectURL(rec.imageData);
+                    els.imagePreviewContainer.classList.remove('hidden');
+                } else {
+                    currentImageFile = null;
+                    els.imagePreview.src = "";
+                    els.imagePreviewContainer.classList.add('hidden');
+                }
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        window.deleteFromHistory = async (id) => {
+            await deleteRecord(STORE_HISTORY, id);
+            renderHistory();
+        };
+
+        window.removeFavorite = async (id) => {
+            await deleteRecord(STORE_FAVORITES, id);
+            renderFavorites();
+        };
+
+        // Utility: Escape HTML to prevent XSS in display
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+    </script>
+</body>
+</html>
